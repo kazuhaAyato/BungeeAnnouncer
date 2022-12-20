@@ -6,13 +6,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import me.zhanshi123.bungeeannouncer.metrics.Metrics;
+import litebans.api.Database;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -45,7 +49,6 @@ public class Main extends Plugin {
         readConfig();
         registerTasks();
         instance = this;
-        new Metrics(this);
         getProxy().getPluginManager().registerCommand(this, new Commands());
         getLogger().info("§a加载了§c" + announces.size() + "§a个消息，启用了§c" + order.size() + "§a个消息");
         getLogger().info("§aBC公告已加载完成!");
@@ -55,6 +58,7 @@ public class Main extends Plugin {
         for (String s : announce.getMessages()) {
             Matcher matcher = pattern.matcher(s);
             String website;
+
             ComponentBuilder builder = new ComponentBuilder("");
             if (matcher.find()) {
                 website = matcher.group();
@@ -70,7 +74,7 @@ public class Main extends Plugin {
                     builder.append(ChatColor.translateAlternateColorCodes('&', parts[1]));
                 }
             } else {
-                builder.append(ChatColor.translateAlternateColorCodes('&', s));
+                builder.append(ChatColor.translateAlternateColorCodes('&', s.replace("{LITEBANS_BANCOUNT}",String.valueOf(getBans()))));
             }
             getProxy().broadcast(builder.create());
         }
@@ -126,10 +130,28 @@ public class Main extends Plugin {
         }
         new ConfigManager(config);
     }
-
+    public Integer getBans(){
+        int bans = 0;
+        ResultSet rs;
+        if(ProxyServer.getInstance().getPluginManager().getPlugin("LiteBans")!=null) {
+            try {
+                PreparedStatement statement = Database.get().prepareStatement("SELECT COUNT(*) FROM `litebans_bans`;");
+                rs = statement.executeQuery();
+                if (rs.next()) {
+                    bans = rs.getInt(1);
+                }
+                rs.close();
+                statement.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        }
+        return bans;
+    }
     public void registerTasks() {
         getProxy().getScheduler().schedule(this, new Runnable() {
             public void run() {
+
                 String name = order.get(current);
                 Announce a = Announce.valueOf(name);
                 if (a == null) {

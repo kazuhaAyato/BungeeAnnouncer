@@ -13,7 +13,7 @@ public class Commands extends Command {
     }
 
     public void sendHelp(CommandSender sender) {
-        sender.sendMessage(new ComponentBuilder("§a======§6BungeeAnnouncer§a======").create());
+        sender.sendMessage(new ComponentBuilder("§a======§6Announcer - Modified By KazuhaAyato§a======").create());
         TextComponent reload = new TextComponent("§4 - §b/ba reload 重载插件");
         reload.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/ba reload"));
         reload.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§9点我可以自动把命令复制到聊天栏哦").create()));
@@ -42,6 +42,7 @@ public class Commands extends Command {
                     sendHelp(sender);
                     return;
                 }
+
                 Announce announce=Announce.valueOf(args[1]);
                 if(announce==null){
                     sender.sendMessage(new ComponentBuilder("§a未找到该消息").create());
